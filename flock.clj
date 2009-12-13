@@ -2,8 +2,8 @@
 
 (def n-birds 10)
 (def max-speed 10)
-(def dim 1000)
-(def behave-sleep-ms 250)
+(def dim 1250)
+(def behave-sleep-ms 20)
 
 (defstruct bird :x :y :dx :dy)
 
@@ -12,6 +12,15 @@
     :x (+ (:x bird) (:dx bird))
     :y (+ (:y bird) (:dy bird))))
 
+(defn bounce [bird]
+  (assoc bird
+    :dx (cond (> (:x bird) dim) (* -1 (Math/abs (:dx bird)))
+             (neg? (:x bird))  (Math/abs (:dx bird))
+             :otherwise (:dx bird))
+    :dy (cond (> (:y bird) dim) (* -1 (Math/abs (:dy bird)))
+             (neg? (:y bird))  (Math/abs (:dy bird))
+             :otherwise (:dy bird))))
+    
 (def running (atom false))
 
 (defn behave [bird]
@@ -19,7 +28,7 @@
    (when @running
      (. Thread (sleep behave-sleep-ms))
      (send-off *agent* #'behave))
-   (move bird)))
+   (-> bird bounce move)))
 
 (defn create-bird []
   (agent (struct bird
