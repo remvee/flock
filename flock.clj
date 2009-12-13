@@ -3,6 +3,7 @@
 (def n-birds 10)
 (def max-speed 10)
 (def dim 1000)
+(def behave-sleep-ms 250)
 
 (defstruct bird :x :y :dx :dy)
 
@@ -16,28 +17,23 @@
 (defn behave [bird]
   (dosync
    (when @running
+     (. Thread (sleep behave-sleep-ms))
      (send-off *agent* #'behave))
    (move bird)))
 
 (defn create-bird []
   (agent (struct bird
                  (rand dim) (rand dim)
-                 (rand max-speed) (rand max-speed))))
+                 (- (rand max-speed) (rand max-speed))
+                 (- (rand max-speed) (rand max-speed)))))
 
 (def birds (map (fn [_] (create-bird)) (range n-birds)))
 
-(defn start []
-  (dosync
-   (when (not @running)
-     (reset! running true)
-     (dorun (map #(send-off % behave) birds)))))
-
-(defn stop []
-  (reset! running false))
 
 ;;;;;;;;;;;;;;; RENDERING ;;;;;;;;;;;;;;;;;;;;;;;
 
 (def scale 0.5)
+(def animation-sleep-ms 50)
 
 (import 
  '(java.awt Color Dimension)
@@ -69,3 +65,22 @@
              (.add panel)
              .pack
              .show))
+
+(defn animate [x]
+  (. panel (repaint))
+  (. Thread (sleep animation-sleep-ms))
+  (send-off *agent* #'animate)
+  nil)
+
+
+;;;;;;;;;;;;;;; CONTROLS ;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn start []
+  (dosync
+   (when (not @running)
+     (reset! running true)
+     (send-off (agent nil) animate)
+     (dorun (map #(send-off % behave) birds)))))
+
+(defn stop []
+  (reset! running false))
