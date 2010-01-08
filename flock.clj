@@ -76,10 +76,11 @@
              .show))
 
 (defn animate [x]
-  (. panel (repaint))
-  (. Thread (sleep animation-sleep-ms))
-  (send-off *agent* #'animate)
-  nil)
+  (when @running
+    (. panel (repaint))
+    (. Thread (sleep animation-sleep-ms))
+    (send-off *agent* #'animate)
+    nil))
 
 
 ;;;;;;;;;;;;;;; CONTROLS ;;;;;;;;;;;;;;;;;;;;;;;
