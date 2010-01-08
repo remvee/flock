@@ -2,10 +2,15 @@
 
 (def n-birds 10)
 (def max-speed 10)
+(def drunkness 3)
+
 (def dim 1250)
 (def behave-sleep-ms 20)
 
 (defstruct bird :x :y :dx :dy)
+
+(defn speed-limited [d]
+  (max (* -1 max-speed) (min max-speed d)))
 
 (defn move [bird]
   (assoc bird
@@ -20,7 +25,12 @@
     :dy (cond (> (:y bird) dim) (* -1 (Math/abs (:dy bird)))
              (neg? (:y bird))  (Math/abs (:dy bird))
              :otherwise (:dy bird))))
-    
+
+(defn stumble [bird]
+  (assoc bird
+    :dx (speed-limited (+ (:dx bird) (- (/ drunkness 2) (rand drunkness))))
+    :dy (speed-limited (+ (:dy bird) (- (/ drunkness 2) (rand drunkness))))))
+
 (def running (atom false))
 
 (defn behave [bird]
@@ -28,7 +38,7 @@
    (when @running
      (. Thread (sleep behave-sleep-ms))
      (send-off *agent* #'behave))
-   (-> bird bounce move)))
+   (-> bird stumble bounce move)))
 
 (defn create-bird []
   (agent (struct bird
@@ -94,3 +104,6 @@
 
 (defn stop []
   (reset! running false))
+
+; (start)
+; (stop)
