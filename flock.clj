@@ -9,6 +9,22 @@
 
 (defstruct bird :x :y :dx :dy)
 
+
+;;;;;;;;;;;;;;; HELPERS ;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn distance [a b]
+  (let [dx (- (:x a) (:x b))
+        dy (- (:y a) (:y b))]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn speed-limited [d]
+  (max (* -1 max-speed) (min max-speed d)))
+
+(defn neighbors-sorted-by-distance [bird]
+  (sort-by #(distance bird %) (map deref birds)))
+
+;;;;;;;;;;;;;;; BEHAVIOUR ;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn move [bird]
   (assoc bird
     :x (+ (:x bird) (:dx bird))
@@ -23,22 +39,23 @@
               (neg? (:y bird))  (Math/abs (:dy bird))
               :otherwise        (:dy bird))))
 
-(defn distance [a b]
-  (let [dx (- (:x a) (:x b))
-        dy (- (:y a) (:y b))]
-    (Math/sqrt (+ (* dx dx) (* dy dy)))))
-
 (defn bounce-others [bird]
-  (let [neighbor (deref (last (take 2 (sort-by #(distance bird (deref %)) birds))))
+  (let [neighbor (nth (neighbors-sorted-by-distance bird) 1)
         dx       (- (:x neighbor) (:x bird))
         dy       (- (:y neighbor) (:y bird))
         n        (max (Math/abs dx) (Math/abs dy))]
     (assoc bird
       :dx (- (:dx bird) (/ dx n))
-      :dy (- (:dy bird) (+ (/ dy n))))))
+      :dy (- (:dy bird) (/ dy n)))))
 
-(defn speed-limited [d]
-  (max (* -1 max-speed) (min max-speed d)))
+(defn follow-leader [bird]
+  (let [leader (last (neighbors-sorted-by-distance bird))
+        dx     (- (:x leader) (:x bird))
+        dy     (- (:y leader) (:y bird))
+        n      (max (Math/abs dx) (Math/abs dy))]
+    (assoc bird
+      :dx (+ (:dx bird) (/ dx n))
+      :dy (+ (:dy bird) (/ dy n)))))
 
 (defn cap-speed [bird]
   (assoc bird
@@ -57,7 +74,7 @@
    (when @running
      (. Thread (sleep behave-sleep-ms))
      (send-off *agent* #'behave))
-   (-> bird bounce-others stumble cap-speed bounce-world move)))
+   (-> bird follow-leader bounce-others stumble cap-speed bounce-world move)))
 
 (defn create-bird []
   (agent (struct bird
