@@ -9,6 +9,16 @@
 
 (defstruct bird :x :y :dx :dy)
 
+(def running (atom false))
+
+(defn create-bird []
+  (agent (struct bird
+                 (rand dim) (rand dim)
+                 (- (rand max-speed) (rand max-speed))
+                 (- (rand max-speed) (rand max-speed)))))
+
+(def birds (map (fn [_] (create-bird)) (range n-birds)))
+
 
 ;;;;;;;;;;;;;;; HELPERS ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -69,22 +79,12 @@
     :dx (+ (:dx bird) (- (/ drunkness 2) (rand drunkness)))
     :dy (+ (:dy bird) (- (/ drunkness 2) (rand drunkness)))))
 
-(def running (atom false))
-
 (defn behave [bird]
   (dosync
    (when @running
      (. Thread (sleep behave-sleep-ms))
      (send-off *agent* #'behave))
    (-> bird follow-leader bounce-others stumble cap-speed bounce-world move)))
-
-(defn create-bird []
-  (agent (struct bird
-                 (rand dim) (rand dim)
-                 (- (rand max-speed) (rand max-speed))
-                 (- (rand max-speed) (rand max-speed)))))
-
-(def birds (map (fn [_] (create-bird)) (range n-birds)))
 
 
 ;;;;;;;;;;;;;;; RENDERING ;;;;;;;;;;;;;;;;;;;;;;;
