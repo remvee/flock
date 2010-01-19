@@ -12,16 +12,14 @@
 
 ;;;;;;;;;;;;;;; HELPERS ;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn distance [a b]
-  (let [dx (- (:x a) (:x b))
-        dy (- (:y a) (:y b))]
-    (Math/sqrt (+ (* dx dx) (* dy dy)))))
+(defn distance [x y]
+  "Distance between two birds."
+  (Math/sqrt (+ (* x x) (* y y))))
 
-(defn speed-limited [d]
-  (max (* -1 max-speed) (min max-speed d)))
-
-(defn neighbors-sorted-by-distance [bird]
-  (sort-by #(distance bird %) (map deref birds)))
+(defn neighbors-sorted-by-distance [birds bird]
+  "Return list of birds sorted by distance from given birds."
+  (sort-by #(distance (- (:x bird) (:x %))
+                      (- (:y bird) (:y %))) birds))
 
 ;;;;;;;;;;;;;;; BEHAVIOUR ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -40,7 +38,7 @@
               :otherwise        (:dy bird))))
 
 (defn bounce-others [bird]
-  (let [neighbor (nth (neighbors-sorted-by-distance bird) 1)
+  (let [neighbor (nth (neighbors-sorted-by-distance (map deref birds) bird) 1)
         dx       (- (:x neighbor) (:x bird))
         dy       (- (:y neighbor) (:y bird))
         n        (max (Math/abs dx) (Math/abs dy))]
@@ -49,7 +47,7 @@
       :dy (- (:dy bird) (/ dy n)))))
 
 (defn follow-leader [bird]
-  (let [leader (last (neighbors-sorted-by-distance bird))
+  (let [leader (last (neighbors-sorted-by-distance (map deref birds) bird))
         dx     (- (:x leader) (:x bird))
         dy     (- (:y leader) (:y bird))
         n      (max (Math/abs dx) (Math/abs dy))]
@@ -58,9 +56,13 @@
       :dy (+ (:dy bird) (/ dy n)))))
 
 (defn cap-speed [bird]
-  (assoc bird
-    :dx (speed-limited (:dx bird))
-    :dy (speed-limited (:dy bird))))
+  (let [speed (distance (:dx bird) (:dy bird))]
+    (if (> speed max-speed)
+      (let [f (/ max-speed speed)]
+        (assoc bird
+          :dx (* (:dx bird) f)
+          :dy (* (:dy bird) f)))
+      bird)))
 
 (defn stumble [bird]
   (assoc bird
