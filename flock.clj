@@ -3,6 +3,7 @@
 (def n-birds 10)
 (def max-speed 10)
 (def drunkness 3)
+(def leader-attraction 1.2)
 
 (def dim 1250)
 (def behave-sleep-ms 20)
@@ -62,8 +63,8 @@
         dy     (- (:y leader) (:y bird))
         n      (max (Math/abs dx) (Math/abs dy))]
     (assoc bird
-      :dx (+ (:dx bird) (/ dx n))
-      :dy (+ (:dy bird) (/ dy n)))))
+      :dx (+ (:dx bird) (* leader-attraction (/ dx n)))
+      :dy (+ (:dy bird) (* leader-attraction (/ dy n))))))
 
 (defn cap-speed [bird]
   (let [speed (distance (:dx bird) (:dy bird))]
