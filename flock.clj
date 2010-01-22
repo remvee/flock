@@ -4,6 +4,7 @@
 (def max-speed 10)
 (def drunkness 3)
 (def leader-attraction 1.2)
+(def privacy-radius 150)
 
 (def dim 1250)
 (def behave-sleep-ms 20)
@@ -50,12 +51,15 @@
 
 (defn bounce-others [bird]
   (let [neighbor (nth (neighbors-sorted-by-distance (map deref birds) bird) 1)
-        dx       (- (:x neighbor) (:x bird))
-        dy       (- (:y neighbor) (:y bird))
-        n        (max (Math/abs dx) (Math/abs dy))]
-    (assoc bird
-      :dx (- (:dx bird) (/ dx n))
-      :dy (- (:dy bird) (/ dy n)))))
+        distance (distance (- (:x bird) (:x neighbor))
+                           (- (:y bird) (:y neighbor)))]
+    (if (< distance privacy-radius)
+      (let [dx       (- (:x neighbor) (:x bird))
+            dy       (- (:y neighbor) (:y bird))]
+        (assoc bird
+          :dx (- (:dx bird) (/ dx distance))
+          :dy (- (:dy bird) (/ dy distance))))
+      bird)))
 
 (defn follow-leader [bird]
   (let [leader (last (neighbors-sorted-by-distance (map deref birds) bird))
@@ -85,7 +89,13 @@
    (when @running
      (. Thread (sleep behave-sleep-ms))
      (send-off *agent* #'behave))
-   (-> bird follow-leader bounce-others stumble cap-speed bounce-world move)))
+   (-> bird
+       follow-leader
+       bounce-others
+       stumble
+       cap-speed
+       bounce-world
+       move)))
 
 
 ;;;;;;;;;;;;;;; RENDERING ;;;;;;;;;;;;;;;;;;;;;;;
