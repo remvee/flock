@@ -1,9 +1,9 @@
 (ns flock)
 
-(def n-birds 10)
+(def n-birds 15)
 (def max-speed 10)
-(def drunkness 3)
-(def leader-attraction 1.2)
+(def drunkness 0.5)
+(def leader-attraction 0.8)
 (def privacy-radius 150)
 
 (def dim 1250)
@@ -21,6 +21,8 @@
 
 (def birds (map (fn [_] (create-bird)) (range n-birds)))
 
+; (start)
+; (stop)
 
 ;;;;;;;;;;;;;;; HELPERS ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -101,7 +103,7 @@
 ;;;;;;;;;;;;;;; RENDERING ;;;;;;;;;;;;;;;;;;;;;;;
 
 (def scale 0.5)
-(def animation-sleep-ms 50)
+(def animation-sleep-ms 25)
 
 (import 
  '(java.awt Color Dimension)
@@ -113,7 +115,8 @@
         y (* scale (:y bird))]
     (doto g
       (.setColor Color/black)
-      (.fillRect x y 5 5))))
+      (.fillRect x y 3 3)
+      (.drawLine (inc x) (inc y) (- x (:dx bird)) (- y (:dy bird))))))
 
 (defn render [g]
   (let [img (BufferedImage. (* scale dim) (* scale dim) BufferedImage/TYPE_INT_RGB)
@@ -150,6 +153,3 @@
 
 (defn stop []
   (reset! running false))
-
-; (start)
-; (stop)
