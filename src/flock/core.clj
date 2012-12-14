@@ -1,9 +1,9 @@
-(ns flock)
+(ns flock.core)
 
 (def n-birds 15)
 (def max-speed 10)
 (def drunkness 0.5)
-(def leader-attraction 0.8)
+(def leader-attraction 0.4)
 (def privacy-radius 150)
 
 (def dim 1250)
@@ -52,7 +52,7 @@
               :otherwise        (:dy bird))))
 
 (defn bounce-others [bird]
-  (let [neighbor (nth (neighbors-sorted-by-distance (map deref birds) bird) 1)
+  (let [neighbor (first (rest (neighbors-sorted-by-distance (map deref birds) bird)))
         distance (distance (- (:x bird) (:x neighbor))
                            (- (:y bird) (:y neighbor)))]
     (if (< distance privacy-radius)
@@ -132,7 +132,7 @@
 (def panel (doto (proxy [JPanel] [] (paint [g] (render g)))
              (.setPreferredSize (Dimension. (* scale dim) (* scale dim)))))
 
-(def frame (doto (new JFrame) (.add panel) .pack .show))
+(def frame (doto (new JFrame "Flock") (.add panel) .pack .show))
 
 (defn animate [x]
   (when @running
