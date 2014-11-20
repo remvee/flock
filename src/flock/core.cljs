@@ -11,8 +11,8 @@
 (def dim {:width 1500 :height 1000})
 (def behave-sleep-ms 50)
 
-(defn create-bird []
-  {:id (rand)
+(defn create-bird [id]
+  {:id id
    :x (rand (:width dim))
    :y (rand (:height dim))
    :dx (- (rand @max-speed) (rand @max-speed))
@@ -20,7 +20,7 @@
 
 (def running (atom false))
 
-(def birds-atom (atom (map (fn [_] (create-bird)) (range n-birds))))
+(def birds-atom (atom (doall (map (fn [id] (create-bird id)) (range n-birds)))))
 
 ;;;;;;;;;;;;;;; HELPERS ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -109,7 +109,7 @@
 
 (defn run []
   (when @running (js/setTimeout run behave-sleep-ms))
-  (swap! birds-atom (fn [birds] (map #(behave % birds) birds))))
+  (swap! birds-atom (fn [birds] (doall (map #(behave % birds) birds)))))
 
 (defn start []
   (when-not @running
