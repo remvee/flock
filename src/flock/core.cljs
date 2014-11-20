@@ -5,7 +5,7 @@
 (def n-birds 15)
 (def max-speed (atom 15))
 (def drunkness (atom 3))
-(def leader-attraction (atom 1))
+(def social (atom 1))
 (def privacy-radius (atom 100))
 
 (def dim {:width 1500 :height 1000})
@@ -73,14 +73,14 @@
           :dy (- (:dy bird) (/ dy distance))))
       bird)))
 
-(defn follow-leader [bird birds]
-  (let [leader (furthest-bird bird birds)
-        dx     (- (:x leader) (:x bird))
-        dy     (- (:y leader) (:y bird))
-        n      (max (Math/abs dx) (Math/abs dy))]
+(defn socialize [bird birds]
+  (let [far (furthest-bird bird birds)
+        dx (- (:x far) (:x bird))
+        dy (- (:y far) (:y bird))
+        n (max (Math/abs dx) (Math/abs dy))]
     (assoc bird
-      :dx (+ (:dx bird) (* @leader-attraction (/ dx n)))
-      :dy (+ (:dy bird) (* @leader-attraction (/ dy n))))))
+      :dx (+ (:dx bird) (* @social (/ dx n)))
+      :dy (+ (:dy bird) (* @social (/ dy n))))))
 
 (defn cap-speed [bird]
   (let [speed (bird-speed bird)]
@@ -98,7 +98,7 @@
 
 (defn behave [bird birds]
   (-> bird
-      (follow-leader birds)
+      (socialize birds)
       (bounce-others birds)
       stumble
       cap-speed
@@ -158,11 +158,11 @@
    [:div.controles
     (input-range "Max. speed" max-speed
                  {:min 0 :max 50})
-    (input-range "Leader attraction" leader-attraction
+    (input-range "Social" social
                  {:min 0 :max 5 :step 0.1})
     (input-range "Drunkness" drunkness
                  {:min 0 :max 25})
-    (input-range "Privacy radius" privacy-radius
+    (input-range "Privacy" privacy-radius
                  {:min 0 :max 500})
     [:div.stop-start
      (if @running
