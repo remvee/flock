@@ -1,0 +1,19 @@
+* flock
+
+Simulate a flock of.. gnats?
+
+** Usage
+
+   Compile clojurescript:
+
+   #+BEGIN_SRC
+   lein cljsbuild once
+   #+END_SRC
+
+   Open a browser: file:resources/public/index.html
+
+** License
+
+   Copyright (C) 2012, 2014 Remco van 't Veer
+
+   Distributed under the Eclipse Public License, the same as Clojure.
