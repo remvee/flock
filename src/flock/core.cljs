@@ -2,7 +2,7 @@
   (:require [clojure.string :as s]
             [reagent.core :as reagent :refer [atom]]))
 
-(def n-birds 15)
+(def n-birds (atom 15))
 (def max-speed (atom 15))
 (def drunkness (atom 3))
 (def social (atom 1))
@@ -11,16 +11,22 @@
 (def dim {:width 1500 :height 1000})
 (def behave-sleep-ms 50)
 
-(defn create-bird [id]
-  {:id id
+(defn create-bird [_]
+  {:id (rand)
    :x (rand (:width dim))
    :y (rand (:height dim))
    :dx (- (rand @max-speed) (rand @max-speed))
    :dy (- (rand @max-speed) (rand @max-speed))})
 
-(def running (atom false))
+(def birds-atom (atom (doall (map create-bird
+                                  (range @n-birds)))))
 
-(def birds-atom (atom (doall (map (fn [id] (create-bird id)) (range n-birds)))))
+(add-watch n-birds :update-birds-atom
+           (fn [_ _ old new]
+             (swap! birds-atom #(doall (if (> old new)
+                                         (take new %)
+                                         (concat % (map create-bird
+                                                        (range (- new old)))))))))
 
 ;;;;;;;;;;;;;;; HELPERS ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -107,6 +113,8 @@
 
 ;;;;;;;;;;;;;;; LIFE ;;;;;;;;;;;;;;;
 
+(def running (atom false))
+
 (defn run []
   (when @running (js/setTimeout run behave-sleep-ms))
   (swap! birds-atom (fn [birds] (doall (map #(behave % birds) birds)))))
@@ -156,6 +164,8 @@
           :viewBox (s/join " " [0 0 (:width dim) (:height dim)])}
     [birds-component]]
    [:div.controles
+    (input-range "Amount" n-birds
+                 {:min 2 :max 50})
     (input-range "Max. speed" max-speed
                  {:min 0 :max 50})
     (input-range "Social" social
