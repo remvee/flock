@@ -8,4 +8,6 @@
 /.lein-deps-sum
 /.nrepl-port
 /resources/public/js/
+/resources/public/js-dev/
 /target/
+/deploy/
